@@ -1,5 +1,6 @@
 package com.desafio.leadprocessor.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class Lead {
     private UUID id;
 
     // Muitos Leads pertencem a um Lote. Usamos LAZY para não carregar o Lote à toa.
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lote_id", nullable = false)
     private Lote lote;

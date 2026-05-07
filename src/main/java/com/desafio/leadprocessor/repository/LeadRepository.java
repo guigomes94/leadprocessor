@@ -14,9 +14,10 @@ import java.util.UUID;
 public interface LeadRepository extends JpaRepository<Lead, UUID> {
 
     @Query("SELECT l FROM Lead l WHERE " +
-            "(:nome IS NULL OR LOWER(l.nome) LIKE LOWER(CONCAT('%', :nome, '%'))) AND " +
-            "(:email IS NULL OR LOWER(l.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND " +
-            "(:origem IS NULL OR LOWER(l.origem) LIKE LOWER(CONCAT('%', :origem, '%')))")
+            "(:nome IS NULL OR LOWER(l.nome) LIKE LOWER(CONCAT('%', CAST(:nome AS String), '%'))) AND " +
+            "(:email IS NULL OR LOWER(l.email) LIKE LOWER(CONCAT('%', CAST(:email AS String), '%'))) AND " +
+            "(:origem IS NULL OR LOWER(l.origem) LIKE LOWER(CONCAT('%', CAST(:origem AS String), '%'))) " +
+            "ORDER BY l.nome ASC")
     Page<Lead> findComFiltros(
             @Param("nome") String nome,
             @Param("email") String email,

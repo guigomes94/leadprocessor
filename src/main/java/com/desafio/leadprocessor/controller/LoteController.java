@@ -2,6 +2,7 @@ package com.desafio.leadprocessor.controller;
 
 import com.desafio.leadprocessor.domain.LoteProcessamento;
 import com.desafio.leadprocessor.repository.LoteProcessamentoRepository;
+import com.desafio.leadprocessor.repository.LoteRepository;
 import com.desafio.leadprocessor.service.LoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class LoteController {
 
     private final LoteService loteService;
+    private final LoteRepository loteRepository;
     private final LoteProcessamentoRepository processamentoRepository;
 
     @PostMapping
@@ -39,10 +41,24 @@ public class LoteController {
     }
 
     @GetMapping("/{id}/status")
-    public ResponseEntity<LoteProcessamento> obterStatusLote(@PathVariable UUID id) {
-        Optional<LoteProcessamento> status = processamentoRepository.findByLoteId(id);
+    public ResponseEntity<Map<String, Object>> obterStatusLote(@PathVariable UUID id) {
+        Optional<LoteProcessamento> procOpt = processamentoRepository.findByLoteId(id);
+        Optional<com.desafio.leadprocessor.domain.Lote> loteOpt = loteRepository.findById(id);
 
-        return status.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        if (procOpt.isPresent() && loteOpt.isPresent()) {
+            LoteProcessamento proc = procOpt.get();
+
+            // Monta um objeto limpo para o React
+            Map<String, Object> response = Map.of(
+                    "totalLinhas", proc.getTotalLinhas(),
+                    "linhasSucesso", proc.getLinhasSucesso(),
+                    "linhasErro", proc.getLinhasErro(),
+                    "tempoProcessamentoMs", proc.getTempoProcessamentoMs(),
+                    "status", loteOpt.get().getStatus().name() // Aqui mandamos o status!
+            );
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.notFound().build();
     }
 }
