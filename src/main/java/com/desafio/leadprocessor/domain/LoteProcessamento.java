@@ -1,5 +1,6 @@
 package com.desafio.leadprocessor.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -21,6 +22,7 @@ public class LoteProcessamento {
     private UUID id;
 
     // Relação 1 para 1 com o Lote. Lazy loading por padrão para otimizar memória.
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lote_id", nullable = false, unique = true)
     private Lote lote;

@@ -29,7 +29,7 @@ CREATE TABLE lotes_processamento
 -- Conforme as colunas esperadas do CSV [cite: 11] e a entidade[cite: 19].
 CREATE TABLE leads
 (
-    id            UUID PRIMARY KEY,
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     lote_id       UUID         NOT NULL REFERENCES lotes (id) ON DELETE CASCADE,
     nome          VARCHAR(255) NOT NULL,
     email         VARCHAR(255) NOT NULL,

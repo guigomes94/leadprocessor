@@ -16,7 +16,7 @@ import java.util.UUID;
 public class Lead {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     // Muitos Leads pertencem a um Lote. Usamos LAZY para não carregar o Lote à toa.

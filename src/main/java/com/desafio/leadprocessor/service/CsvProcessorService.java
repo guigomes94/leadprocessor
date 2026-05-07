@@ -99,6 +99,7 @@ public class CsvProcessorService {
             try {
                 // Mapeamento: nome, email, telefone, origem, data_cadastro
                 Lead lead = Lead.builder()
+                        .id(UUID.randomUUID())
                         .lote(loteRef)
                         .nome(colunas[0])
                         .email(colunas[1])
@@ -119,6 +120,12 @@ public class CsvProcessorService {
             } catch (Exception ex) {
                 erro++;
             }
+        }
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
         long tempoGasto = System.currentTimeMillis() - inicioMs;
