@@ -1,6 +1,7 @@
 package com.desafio.leadprocessor.controller;
 
 import com.desafio.leadprocessor.domain.LoteProcessamento;
+import com.desafio.leadprocessor.repository.LeadRepository;
 import com.desafio.leadprocessor.repository.LoteProcessamentoRepository;
 import com.desafio.leadprocessor.repository.LoteRepository;
 import com.desafio.leadprocessor.service.LoteService;
@@ -14,6 +15,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +29,7 @@ public class LoteController {
     private final LoteService loteService;
     private final LoteRepository loteRepository;
     private final LoteProcessamentoRepository processamentoRepository;
+    private final LeadRepository leadRepository;
 
     @PostMapping
     public ResponseEntity<?> uploadCsv(@RequestParam("file") MultipartFile file) {
@@ -88,5 +91,29 @@ public class LoteController {
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/stats/global")
+    public ResponseEntity<Map<String, Object>> obterEstatisticasGlobais() {
+        long totalLeads = leadRepository.count();
+        long totalLotes = loteRepository.count();
+
+        // Buscamos todos os registros de progresso para calcular a taxa de erro global
+        List<LoteProcessamento> todosProcessamentos = processamentoRepository.findAll();
+
+        long totalSucesso = todosProcessamentos.stream()
+                .mapToLong(LoteProcessamento::getLinhasSucesso).sum();
+        long totalErro = todosProcessamentos.stream()
+                .mapToLong(LoteProcessamento::getLinhasErro).sum();
+
+        long totalProcessado = totalSucesso + totalErro;
+        double taxaErro = totalProcessado > 0 ? ((double) totalErro / totalProcessado) * 100 : 0.0;
+
+        return ResponseEntity.ok(Map.of(
+                "totalLeads", totalLeads,
+                "totalLotes", totalLotes,
+                "taxaErro", String.format("%.2f", taxaErro) + "%",
+                "totalProcessado", totalProcessado
+        ));
     }
 }
