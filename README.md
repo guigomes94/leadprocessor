@@ -1,6 +1,5 @@
 
 # Lead Processor 🚀
-___
 
 Sistema de alto desempenho para processamento assíncrono de arquivos CSV. O projeto utiliza **Java 21** com **Virtual Threads** para I/O eficiente e **Apache Kafka** para mensageria distribuída.
 
