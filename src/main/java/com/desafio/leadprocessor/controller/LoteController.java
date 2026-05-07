@@ -1,0 +1,48 @@
+package com.desafio.leadprocessor.controller;
+
+import com.desafio.leadprocessor.domain.LoteProcessamento;
+import com.desafio.leadprocessor.repository.LoteProcessamentoRepository;
+import com.desafio.leadprocessor.service.LoteService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/lotes")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*") // Libera o CORS para o nosso frontend React no futuro
+public class LoteController {
+
+    private final LoteService loteService;
+    private final LoteProcessamentoRepository processamentoRepository;
+
+    @PostMapping
+    public ResponseEntity<Map<String, UUID>> uploadCsv(@RequestParam("file") MultipartFile file) {
+        try {
+            UUID loteId = loteService.receberUploadCsv(file);
+
+            // Retornamos 202 (Accepted) em vez de 200 (OK) ou 201 (Created).
+            // Essa é a melhor prática REST para processamentos assíncronos,
+            // indicando que a requisição foi aceita, mas ainda não terminou.
+            return ResponseEntity.accepted().body(Map.of("loteId", loteId));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("erro", null)); // ou tratar a mensagem de erro adequadamente
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/{id}/status")
+    public ResponseEntity<LoteProcessamento> obterStatusLote(@PathVariable UUID id) {
+        Optional<LoteProcessamento> status = processamentoRepository.findByLoteId(id);
+
+        return status.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+}

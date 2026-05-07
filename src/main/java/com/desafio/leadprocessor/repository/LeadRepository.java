@@ -1,0 +1,24 @@
+package com.desafio.leadprocessor.repository;
+
+import com.desafio.leadprocessor.domain.Lead;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface LeadRepository extends JpaRepository<Lead, Long> {
+
+    @Query("SELECT l FROM Lead l WHERE " +
+            "(:nome IS NULL OR LOWER(l.nome) LIKE LOWER(CONCAT('%', :nome, '%'))) AND " +
+            "(:email IS NULL OR LOWER(l.email) LIKE LOWER(CONCAT('%', :email, '%'))) AND " +
+            "(:origem IS NULL OR LOWER(l.origem) LIKE LOWER(CONCAT('%', :origem, '%')))")
+    Page<Lead> findComFiltros(
+            @Param("nome") String nome,
+            @Param("email") String email,
+            @Param("origem") String origem,
+            Pageable pageable
+    );
+}
