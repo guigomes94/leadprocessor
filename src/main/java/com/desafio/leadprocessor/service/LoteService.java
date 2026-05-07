@@ -25,8 +25,7 @@ public class LoteService {
     private final LoteProcessamentoRepository processamentoRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final CsvProcessorService csvProcessor;
-
-    @Transactional
+    
     public UUID receberUploadCsv(MultipartFile file) throws IOException {
         // Validação básica exigida no desafio
         if (file.isEmpty() || !file.getOriginalFilename().endsWith(".csv")) {
