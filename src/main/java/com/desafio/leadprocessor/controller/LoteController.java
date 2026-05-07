@@ -9,6 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.MalformedInputException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,7 +21,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/lotes")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Libera o CORS para o nosso frontend React no futuro
+@CrossOrigin(origins = "*")
 public class LoteController {
 
     private final LoteService loteService;
@@ -24,19 +29,42 @@ public class LoteController {
     private final LoteProcessamentoRepository processamentoRepository;
 
     @PostMapping
-    public ResponseEntity<Map<String, UUID>> uploadCsv(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadCsv(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "O arquivo não pode estar vazio."));
+        }
+
+        // === VALIDAÇÃO RESTRITA DE UTF-8 ===
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                file.getInputStream(),
+                StandardCharsets.UTF_8.newDecoder()
+                        .onMalformedInput(CodingErrorAction.REPORT)
+                        .onUnmappableCharacter(CodingErrorAction.REPORT)))) {
+
+            // Varre o arquivo rapidamente na memória para forçar o erro se não for UTF-8
+            char[] buffer = new char[8192];
+            while (br.read(buffer) != -1) {
+                // Apenas lendo para validar os bytes
+            }
+
+        } catch (MalformedInputException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "erro", "Codificação inválida. O arquivo CSV deve estar obrigatoriamente no formato UTF-8."
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("erro", "Erro ao ler o arquivo."));
+        }
+
         try {
+            // Substitua esta linha pela chamada real do seu serviço
             UUID loteId = loteService.receberUploadCsv(file);
 
-            // Retornamos 202 (Accepted) em vez de 200 (OK) ou 201 (Created).
-            // Essa é a melhor prática REST para processamentos assíncronos,
-            // indicando que a requisição foi aceita, mas ainda não terminou.
-            return ResponseEntity.accepted().body(Map.of("loteId", loteId));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("erro", null)); // ou tratar a mensagem de erro adequadamente
+            return ResponseEntity.accepted().body(Map.of(
+                    "mensagem", "Upload recebido com sucesso",
+                    "loteId", loteId
+            ));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(Map.of("erro", e.getMessage()));
         }
     }
 
