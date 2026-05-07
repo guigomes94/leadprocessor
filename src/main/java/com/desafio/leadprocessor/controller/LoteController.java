@@ -5,7 +5,10 @@ import com.desafio.leadprocessor.repository.LeadRepository;
 import com.desafio.leadprocessor.repository.LoteProcessamentoRepository;
 import com.desafio.leadprocessor.repository.LoteRepository;
 import com.desafio.leadprocessor.service.LoteService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +27,7 @@ import java.util.UUID;
 @RequestMapping("/api/lotes")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Lotes", description = "Endpoints para gerenciamento e upload de lotes de CSV")
 public class LoteController {
 
     private final LoteService loteService;
@@ -31,7 +35,8 @@ public class LoteController {
     private final LoteProcessamentoRepository processamentoRepository;
     private final LeadRepository leadRepository;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Realiza o upload de um arquivo CSV de Leads", description = "O arquivo deve estar obrigatoriamente no formato UTF-8.")
     public ResponseEntity<?> uploadCsv(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("erro", "O arquivo não pode estar vazio."));
@@ -72,6 +77,7 @@ public class LoteController {
     }
 
     @GetMapping("/{id}/status")
+    @Operation(summary = "Informa o status atual do lote")
     public ResponseEntity<Map<String, Object>> obterStatusLote(@PathVariable UUID id) {
         Optional<LoteProcessamento> procOpt = processamentoRepository.findByLoteId(id);
         Optional<com.desafio.leadprocessor.domain.Lote> loteOpt = loteRepository.findById(id);
@@ -94,6 +100,7 @@ public class LoteController {
     }
 
     @GetMapping("/stats/global")
+    @Operation(summary = "Informa as estatisticas gerais")
     public ResponseEntity<Map<String, Object>> obterEstatisticasGlobais() {
         long totalLeads = leadRepository.count();
         long totalLotes = loteRepository.count();
