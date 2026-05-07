@@ -9,7 +9,6 @@ import com.desafio.leadprocessor.repository.LoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -48,7 +47,7 @@ public class LoteService {
         file.transferTo(tempFile);
 
         // 4. Publica o evento de início
-        kafkaTemplate.send("lote-eventos", new LoteIniciadoEvent(lote.getId()));
+        kafkaTemplate.send("lote.iniciado", new LoteIniciadoEvent(lote.getId()));
 
         // 5. Dispara o processamento assíncrono (Fire and Forget)
         csvProcessor.processarLoteAssincrono(lote.getId(), tempFile);

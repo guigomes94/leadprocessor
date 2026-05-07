@@ -8,7 +8,6 @@ import com.desafio.leadprocessor.repository.LeadRepository;
 import com.desafio.leadprocessor.repository.LoteRepository;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
-import com.opencsv.exceptions.CsvValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -76,12 +74,12 @@ public class CsvProcessorService {
             }
 
             // Tudo finalizado! Notifica o Kafka.
-            kafkaTemplate.send("lote-eventos", new LoteFinalizadoEvent(loteId));
+            kafkaTemplate.send("lote.finalizado", new LoteFinalizadoEvent(loteId));
             log.info("Lote {} concluído com sucesso.", loteId);
 
         } catch (Exception e) {
             log.error("Erro fatal ao processar o lote {}", loteId, e);
-            // Aqui caberia atualizar o status do lote para ERRO no banco
+
         } finally {
             // Limpeza: apaga o arquivo temporário do SO
             if (tempCsvFile.exists()) {
@@ -105,7 +103,7 @@ public class CsvProcessorService {
                         .email(colunas[1])
                         .telefone(colunas[2])
                         .origem(colunas[3])
-                        .dataCadastro(Instant.now()) // Poderia parsear colunas[4] se fosse uma data real
+                        .dataCadastro(Instant.now())
                         .build();
 
                 // Tenta salvar 1 a 1 para isolar a constraint de unicidade de e-mail.
@@ -123,7 +121,7 @@ public class CsvProcessorService {
         }
 
         try {
-            Thread.sleep(1000);
+            Thread.sleep(1000); // Atraso para melhorar a visualização no front
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -131,7 +129,7 @@ public class CsvProcessorService {
         long tempoGasto = System.currentTimeMillis() - inicioMs;
 
         // Publica estatísticas parciais deste chunk
-        kafkaTemplate.send("lote-eventos",
+        kafkaTemplate.send("lote.chunk.concluido",
                 new LoteChunkConcluidoEvent(loteRef.getId(), sucesso, erro, tempoGasto));
     }
 }
